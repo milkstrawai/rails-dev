@@ -95,7 +95,7 @@ class ProcessesTest < Minitest::Test
     pid = start_with_processes({ "TEST_PROCESS_FAIL" => "1" })
 
     assert_equal 23, finish(pid, nil).exitstatus
-    assert_includes output(pid), "foreman exited during startup"
+    assert_match(/foreman exited (during startup|while running) \(exit status 23\)/, output(pid))
     refute_includes output(pid), "selecting ports again"
   end
 

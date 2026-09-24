@@ -11,7 +11,7 @@ require "tmpdir"
 module TestWorkspace
   def setup
     super
-    @workspace = Dir.mktmpdir("rails-dev-test-")
+    @workspace = File.realpath(Dir.mktmpdir("rails-dev-test-"))
     @root = File.join(@workspace, "app")
     FileUtils.cp_r(File.join(__dir__, "fixtures/app"), @root)
   end
