@@ -1,0 +1,44 @@
+name: Release Gem to RubyGems.org
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Check release version
+        run: |
+          ruby -r ./lib/rails_dev/version -e '
+            tag = ENV.fetch("RELEASE_TAG")
+            expected = RailsDev::VERSION
+            abort "Release tag #{tag} does not match #{expected}." unless tag == expected
+          '
+      - name: Test and build the gem
+        run: bundle exec rake test rubocop build
+      - name: Publish to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_AUTH_TOKEN }}
+        run: |
+          if [ -z "$GEM_HOST_API_KEY" ]; then
+            echo "::error::Set the RUBYGEMS_AUTH_TOKEN repository secret before publishing."
+            exit 1
+          fi
+          gem push "pkg/rails-dev-${RELEASE_TAG}.gem"

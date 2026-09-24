@@ -13,24 +13,22 @@ Works on macOS and Linux with ERB or Vite apps. Foreman runs your Procfile. Your
 | Docker Compose 2.24.4+ | Managed Docker services |
 | Connected Tailscale client | Sharing over your tailnet |
 
-The gem is not published yet. From the rails-dev checkout, using the same Ruby as your app:
+Install using the same Ruby as your app:
 
 ```sh
-bundle install
-bundle exec rake build
-gem install --local pkg/rails-dev-0.1.0.gem
+gem install rails-dev
 ```
+
+For a bundled installation, use `bundle add` below and prefix rails-dev commands with `bundle exec`.
 
 ## Set up your app
 
 Use your app's usual shell environment and install its dependencies first. Mise is optional.
 
-**1. Add the Rails helper to your Gemfile**, then run `bundle install`:
+**1. Add the Rails helper to your app:**
 
-```ruby
-group :development, :test do
-  gem "rails-dev", "0.1.0", require: "rails_dev/railtie"
-end
+```sh
+bundle add rails-dev --group development,test --require rails_dev/railtie
 ```
 
 The helper configures hostnames, route and mailer URLs, and cookies for each instance. Apps using `rails_vite` also need the [Vite setup](docs/reference.md#vite).

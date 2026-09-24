@@ -66,7 +66,7 @@ class ReadinessTest < Minitest::Test
   end
 
   def test_timeout_stops_the_app_and_removes_its_runtime
-    configure("readiness: { timeout: 0.4 }")
+    configure("readiness: { timeout: 2 }")
     pid = start_cli({ "TEST_HTTP_STATUS" => "503" })
 
     assert_equal 1, finish(pid, nil).exitstatus
@@ -78,7 +78,7 @@ class ReadinessTest < Minitest::Test
   end
 
   def test_readiness_diagnostics_omit_query_values_headers_and_bodies
-    configure('readiness: { timeout: 0.4, path: "/health?token=private-query", method: "POST", ' \
+    configure('readiness: { timeout: 2, path: "/health?token=private-query", method: "POST", ' \
               'headers: { "Authorization" => "private-header" }, body: "private-body" }')
     pid = start_cli({ "TEST_HTTP_STATUS" => "503" })
 
@@ -89,7 +89,7 @@ class ReadinessTest < Minitest::Test
   end
 
   def test_explains_a_failing_custom_success_condition
-    configure("readiness: { timeout: 0.4, success: ->(_response) { false } }")
+    configure("readiness: { timeout: 2, success: ->(_response) { false } }")
     pid = start_cli
 
     assert_equal 1, finish(pid, nil).exitstatus

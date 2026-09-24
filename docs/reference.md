@@ -165,7 +165,7 @@ Custom checks must return promptly and manage their own timeouts. Checks gate `a
 For `rails_vite` and `rails-vite-plugin`, load both helpers in your Gemfile's development/test group:
 
 ```ruby
-gem "rails-dev", "0.1.0", require: ["rails_dev/railtie", "rails_dev/rails_vite"]
+gem "rails-dev", require: ["rails_dev/railtie", "rails_dev/rails_vite"]
 ```
 
 Declare the [HTTP endpoint](#additional-http-servers) with `url_env: "RAILS_DEV_VITE_URL"`. Add the helper to your existing Vite configuration, keeping your other plugins. Its returned options can be customized:
