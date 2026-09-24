@@ -9,6 +9,7 @@ module CLIProcess
     @output_paths ||= {}
     @output_path = File.join(@workspace, "cli-#{@output_paths.length}.log")
     env = Bundler.unbundled_env.merge(
+      "GEM_PATH" => Gem.path.join(File::PATH_SEPARATOR),
       "PATH" => "#{fixture("tools")}:#{ENV.fetch("PATH")}",
       "XDG_STATE_HOME" => @workspace, "XDG_CONFIG_HOME" => @workspace,
       "TEST_EVENTS" => File.join(@workspace, "events.jsonl"),

@@ -73,6 +73,17 @@ class CommandsTest < Minitest::Test
     assert_raises(Errno::ESRCH) { Process.kill(0, descendant) }
   end
 
+  def test_shutdown_reaps_an_already_exited_child
+    child = @commands.start("exited", [RbConfig.ruby, fixture("worker.rb"), "failure"], stream: false)
+    deadline = @commands.monotonic_time + 5
+    sleep 0.01 while RailsDev::ProcessTable.new.identity(child.pid) && @commands.monotonic_time < deadline
+
+    refute RailsDev::ProcessTable.new.identity(child.pid)
+    @commands.stop
+
+    assert_equal 7, child.status.exitstatus
+  end
+
   def test_lost_terminal_output_does_not_interrupt_forced_shutdown
     terminal = Object.new
     def terminal.write(*) = raise(Errno::EIO)

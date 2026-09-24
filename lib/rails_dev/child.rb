@@ -52,16 +52,15 @@ module RailsDev
     end
 
     def group_alive?
-      Process.kill(0, -pid)
-      true
-    rescue Errno::ESRCH
-      false
+      !!signal(0)
     end
 
     def signal(value)
       Process.kill(value, -pid)
     rescue Errno::ESRCH
       nil
+    rescue Errno::EPERM
+      raise unless ProcessTable.new.members([pid]).empty?
     end
 
     def output
