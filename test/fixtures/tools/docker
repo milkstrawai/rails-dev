@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+require "json"
+abort "Expected compose" unless ARGV.shift == "compose"
+args = ARGV.dup
+files = []
+while %w[-f --profile].include?(args.first)
+  option, value = args.slice!(0, 2)
+  files << value if option == "-f"
+end
+command = args.shift
+case command
+when "version"
+  puts ENV.fetch("TEST_COMPOSE_VERSION", "2.24.4")
+when "config"
+  puts JSON.generate(name: "rails-dev-fixture", services: {postgres: {ports: [{target: 5432, protocol: "tcp"}]}})
+when "stop"
+  File.open(ENV.fetch("TEST_EVENTS"), "a") { |file| file.puts JSON.generate(event: "compose_stop", arguments: args) }
+when "up"
+  File.open(ENV.fetch("TEST_EVENTS"), "a") do |file|
+    file.puts JSON.generate(event: "compose_up", arguments: args, override: File.read(files.last), base: files.first)
+  end
+when "ps"
+  ports = [{"URL" => ENV.fetch("TEST_PGHOST", "127.0.0.1"), "TargetPort" => 5432,
+            "PublishedPort" => Integer(ENV.fetch("TEST_PGPORT", "45432")), "Protocol" => "tcp"}]
+  ports << ports.first.merge("URL" => "0.0.0.0") if ENV["TEST_EXTRA_BINDING"] == "1"
+  puts JSON.generate("Service" => "postgres", "Publishers" => ports)
+else
+  abort "Unexpected Docker mutation: #{command}"
+end

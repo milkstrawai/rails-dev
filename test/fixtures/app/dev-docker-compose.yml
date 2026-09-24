@@ -1,0 +1,8 @@
+name: rails-dev-fixture
+services:
+  postgres:
+    image: postgres:18
+    ports:
+      - "127.0.0.1:5434:5432"
+    environment:
+      POSTGRES_PASSWORD: fixture

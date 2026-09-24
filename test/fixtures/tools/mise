@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+require "json"
+abort "Unknown mise command" unless ARGV.shift == "run"
+File.open(ENV.fetch("TEST_EVENTS"), "a") do |file|
+  file.puts JSON.generate(event: "task", name: ARGV.first, port: ENV["PGPORT"], runtime: ENV["RAILS_DEV_RUNTIME"])
+end
+abort "Preparation failed" if ENV["TEST_FAIL_PREPARE"] == "1"
+sleep if ENV["TEST_BLOCK_PREPARE"] == "1"
+if ENV["TEST_PREPARE_GATE"] && ARGV.first == "deps:ruby"
+  sleep 0.02 while File.exist?(ENV["TEST_PREPARE_GATE"])
+end

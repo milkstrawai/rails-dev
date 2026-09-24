@@ -1,0 +1,4 @@
+web: bin/rails server
+js: pnpm exec vite
+worker: ruby "$TEST_PROCESS_COMMAND" worker "${TEST_INTEGRATION:-none}"
+helper: ruby "$TEST_PROCESS_COMMAND" helper "${TEST_INTEGRATION:-none}"

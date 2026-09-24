@@ -1,0 +1,4 @@
+web: bin/rails server
+js: pnpm exec vite
+worker: ruby "$TEST_PROCESS_COMMAND" worker 'two words; $(not-a-command)'
+helper: ruby "$TEST_PROCESS_COMMAND" helper

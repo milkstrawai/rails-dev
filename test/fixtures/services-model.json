@@ -1,0 +1,11 @@
+{
+  "name": "rails-dev-fixture",
+  "services": {
+    "postgres": {"ports": [{"target":5432,"published":"5434","protocol":"tcp"}]},
+    "redis": {"ports": [{"target":6379,"published":"6379","protocol":"tcp"}]},
+    "clickhouse": {"ports": [{"target":8123,"protocol":"tcp"},{"target":9000,"protocol":"tcp"}]},
+    "internal": {"expose":["8080"]},
+    "dns": {"ports":[{"target":53,"protocol":"udp"}]},
+    "debug": {"ports":[{"target":8080,"protocol":"tcp"}]}
+  }
+}

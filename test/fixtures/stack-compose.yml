@@ -1,0 +1,49 @@
+name: ${RAILS_DEV_TEST_PROJECT:?}
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: fixture
+      POSTGRES_PASSWORD: fixture
+      POSTGRES_DB: fixture
+    ports: ["127.0.0.1:${RAILS_DEV_TEST_OCCUPIED_PORT:?}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixture -d fixture"]
+      interval: 500ms
+      timeout: 3s
+      retries: 60
+  setup:
+    image: redis:7.2.3
+    command: ["sh", "-c", "exit 0"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  redis:
+    image: redis:7.2.3
+    ports: ["127.0.0.1:${RAILS_DEV_TEST_OCCUPIED_PORT:?}:6379"]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.1
+    environment:
+      CLICKHOUSE_USER: fixture
+      CLICKHOUSE_PASSWORD: fixture
+    ports:
+      - "127.0.0.1:${RAILS_DEV_TEST_OCCUPIED_PORT:?}:8123"
+      - "127.0.0.1:${RAILS_DEV_TEST_OCCUPIED_PORT:?}:9000"
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--user", "fixture", "--password", "fixture", "--query", "SELECT 1"]
+      interval: 1s
+      timeout: 3s
+      retries: 60
+  internal:
+    image: redis:7.2.3
+    expose: ["6379"]
+  excluded:
+    image: redis:7.2.3
+    ports: ["6379"]
+  optional:
+    image: redis:7.2.3
+    profiles: [debug]
+    ports: ["6379"]

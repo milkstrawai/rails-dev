@@ -1,0 +1,31 @@
+[tools]
+ruby = "4.0.6"
+node = "24"
+
+[tasks."deps:ruby"]
+description = "Install Ruby dependencies"
+run = "bundle install"
+
+[tasks.test]
+description = "Run Minitest"
+run = "bundle exec rake test"
+
+[tasks.lint]
+description = "Run RuboCop"
+run = "bundle exec rubocop --no-server"
+
+[tasks."test:docker"]
+description = "Test real Docker services with disposable PostgreSQL, Redis, and ClickHouse containers"
+run = "bundle exec rake test_docker"
+
+[tasks.build]
+description = "Build the gem"
+run = "bundle exec rake build"
+
+[tasks."test:https"]
+description = "Test the pinned HTTPS proxy with temporary certificates and real subprocesses"
+run = "bundle exec rake test_https"
+
+[tasks.ci]
+description = "Run tests, lint, and gem packaging"
+run = "bundle exec rake test rubocop build"

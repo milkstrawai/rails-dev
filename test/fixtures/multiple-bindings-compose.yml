@@ -1,0 +1,9 @@
+name: ${RAILS_DEV_TEST_PROJECT:?}
+services:
+  redis:
+    image: redis:7.2.3
+    ports:
+      - target: 6379
+        host_ip: 127.0.0.1
+      - target: 6379
+        host_ip: 127.0.0.2

@@ -1,0 +1,32 @@
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        ruby: ["3.4", "4.0"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: bundle exec rake test rubocop build
+      - name: Test HTTPS routing and cleanup
+        run: bundle exec rake test_https
+      - name: Test real Docker port allocation
+        if: runner.os == 'Linux'
+        run: bundle exec rake test_docker

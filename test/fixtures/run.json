@@ -1,0 +1,11 @@
+{
+  "name": "example",
+  "root": "/apps/example",
+  "pid": 12345,
+  "status": "ready",
+  "processes": [],
+  "urls": {
+    "web": "https://example-3000.localhost",
+    "js": "https://example-3000-js.localhost"
+  }
+}

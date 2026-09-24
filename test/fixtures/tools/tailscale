@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+require "json"
+require "fileutils"
+STDOUT.sync = true
+STDERR.sync = true
+
+directory = File.join(ENV.fetch("XDG_STATE_HOME"), "tailscale")
+conflict = File.join(directory, "conflict")
+FileUtils.mkdir_p(directory)
+def record(event, **values)
+  File.open(ENV.fetch("TEST_EVENTS"), "a") do |file|
+    file.puts JSON.generate({ event: event, pid: Process.pid, runtime: ENV["RAILS_DEV_RUNTIME"] }.merge(values))
+  end
+end
+
+case ARGV
+when ["status", "--json"]
+  record("tailscale_check")
+  puts JSON.generate(BackendState: ENV.fetch("TEST_TAILSCALE_STATE", "Running"), Self: {
+    DNSName: "laptop.example.ts.net.",
+    CapMap: ENV["TEST_TAILSCALE_NO_HTTPS"] ? {} : { "https://tailscale.com/cap/https" => nil }
+  })
+when ["serve", "status", "--json"]
+  abort "Cannot read Serve configuration" if ENV["TEST_TAILSCALE_STATUS_ERROR"]
+  config = ENV["TEST_TAILSCALE_CONFIG"] ? JSON.parse(File.read(ENV["TEST_TAILSCALE_CONFIG"])) : {}
+  if File.exist?(conflict)
+    config["TCP"] ||= {}
+    config["TCP"][File.read(conflict)] = { HTTPS: true }
+  end
+  config["Foreground"] ||= {}
+  Dir[File.join(directory, "*.json")].each do |file|
+    route = JSON.parse(File.read(file))
+    Process.kill(0, route.fetch("pid"))
+    config["Foreground"][route.fetch("pid").to_s] = { TCP: { route.fetch("port").to_s => { HTTPS: true } } }
+  rescue Errno::ESRCH
+    nil
+  end
+  puts JSON.generate(config)
+else
+  abort "Expected foreground Serve" unless ARGV[0..1] == ["serve", "--bg=false"]
+  port = Integer(ARGV.fetch(2).delete_prefix("--https="))
+  target = ARGV.fetch(3)
+  if ENV["TEST_TAILSCALE_CONFLICT"] && !File.exist?(conflict)
+    File.write(conflict, port.to_s)
+    abort "listener already exists for port #{port}"
+  end
+  if ENV["TEST_TAILSCALE_FAIL_PORT"] == port.to_s
+    abort "Access denied: serve config denied"
+  end
+  record("serve_started", port: port, target: target, arguments: ARGV)
+  path = File.join(directory, "#{Process.pid}.json")
+  File.write(path, JSON.generate(pid: Process.pid, port: port))
+  Signal.trap("INT") { exit }
+  Signal.trap("TERM") { exit }
+  at_exit do
+    FileUtils.rm_f(path)
+    record("serve_stopped")
+  end
+  puts "Press Ctrl+C to exit." unless ENV["TEST_TAILSCALE_TIMEOUT"]
+  sleep
+end

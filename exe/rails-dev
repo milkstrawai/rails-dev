@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/rails_dev"
+$stdout.sync = true
+exit RailsDev::CLI.run(ARGV)

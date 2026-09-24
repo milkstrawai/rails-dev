@@ -1,0 +1,15 @@
+name: ${RAILS_DEV_TEST_PROJECT:?}
+services:
+  postgres:
+    image: postgres:18
+    ports:
+      - "127.0.0.1:${RAILS_DEV_TEST_OCCUPIED_PORT:?}:5432"
+    environment:
+      POSTGRES_USER: fixture
+      POSTGRES_PASSWORD: fixture
+      POSTGRES_DB: fixture
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixture -d fixture"]
+      interval: 500ms
+      timeout: 3s
+      retries: 60
