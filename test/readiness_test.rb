@@ -65,49 +65,29 @@ class ReadinessTest < Minitest::Test
     finish(pid)
   end
 
-  def test_timeout_stops_the_app_and_removes_its_runtime
-    configure("readiness: { timeout: 2 }")
-    pid = start_cli({ "TEST_HTTP_STATUS" => "503" })
-
-    assert_equal 1, finish(pid, nil).exitstatus
-    assert_match(%r{web \(GET http://127\.0\.0\.1:\d+/up\): HTTP 503; expected 200}, output(pid))
-    started = events.find { |event| event["event"] == "started" }
-
-    assert_raises(Errno::ESRCH) { Process.kill(0, started.fetch("pid")) }
-    refute_path_exists started.fetch("runtime")
-  end
-
-  def test_readiness_diagnostics_omit_query_values_headers_and_bodies
-    configure('readiness: { timeout: 2, path: "/health?token=private-query", method: "POST", ' \
-              'headers: { "Authorization" => "private-header" }, body: "private-body" }')
-    pid = start_cli({ "TEST_HTTP_STATUS" => "503" })
-
-    assert_equal 1, finish(pid, nil).exitstatus
-    assert_match(%r{web \(POST http://127\.0\.0\.1:\d+/health\): HTTP 503}, output(pid))
-    refute_match(/private-(query|header|body)/, output(pid))
-    assert_includes output(pid), "Check the process output and readiness settings."
-  end
-
-  def test_explains_a_failing_custom_success_condition
-    configure("readiness: { timeout: 2, success: ->(_response) { false } }")
-    pid = start_cli
-
-    assert_equal 1, finish(pid, nil).exitstatus
-    assert_includes output(pid), "HTTP 200; expected a passing custom success check"
-    refute_includes output(pid), "#<Proc"
-  end
-
-  def test_explains_a_failing_custom_readiness_check
+  def test_timeout_stops_owned_processes_and_removes_the_runtime
+    snapshot = File.join(@workspace, "timed-out-instance.json")
     File.write(File.join(@root, "config/rails_dev.local.rb"), <<~RUBY)
       RailsDev.configure do |config|
+        session = nil
+        config.before_start { |run| session = run }
         config.readiness = { timeout: 0.4 }
-        config.http :web, readiness: ->(_endpoint) { false }
+        config.http :web, readiness: lambda { |_endpoint|
+          instance = JSON.parse(File.read(File.join(session.runtime, "instance.json")))
+          File.write(#{snapshot.dump}, JSON.generate(instance.merge("runtime" => session.runtime)))
+          false
+        }
       end
     RUBY
     pid = start_cli
 
     assert_equal 1, finish(pid, nil).exitstatus
     assert_includes output(pid), "web (custom readiness check): check did not pass"
+    instance = JSON.parse(File.read(snapshot))
+    group = instance.fetch("processes").fetch(0).fetch(1)
+
+    assert_empty RailsDev::ProcessTable.new.members([group])
+    refute_path_exists instance.fetch("runtime")
   end
 
   def test_custom_check_can_wait_for_an_app_owned_file

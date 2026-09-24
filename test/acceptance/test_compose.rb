@@ -50,6 +50,7 @@ class ComposeAcceptanceTest < Minitest::Test
   end
 
   def test_recovering_an_app_instance_preserves_its_shared_database
+    @compose.start
     FileUtils.mkdir_p(File.join(@root, "config"))
     FileUtils.cp(fixture("service_config.rb"), File.join(@root, "config/rails_dev.rb"))
     FileUtils.cp(fixture("erb/Procfile.dev"), File.join(@root, "Procfile.dev"))
