@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "net/http"
+require "pty"
 require_relative "support/cli_process"
 
 class CLITest < Minitest::Test
@@ -35,6 +36,30 @@ class CLITest < Minitest::Test
     @rails_socket&.close
     @vite_socket&.close
     super
+  end
+
+  def test_colors_foreman_process_labels_in_a_terminal
+    assert_match(/\e\[\d+m.*web\.1/, terminal_output)
+  end
+
+  def test_keeps_redirected_output_plain
+    pid = start_cli({ "TERM" => "xterm-256color", "NO_COLOR" => nil })
+    wait_until(pid) { output(pid).include?("Ready:") }
+
+    refute_includes output(pid), "\e["
+    finish(pid)
+  end
+
+  def test_no_color_disables_terminal_colors
+    refute_includes terminal_output("NO_COLOR" => "1"), "\e["
+  end
+
+  def test_empty_no_color_keeps_terminal_colors
+    assert_match(/\e\[\d+m.*web\.1/, terminal_output("NO_COLOR" => ""))
+  end
+
+  def test_dumb_terminal_keeps_output_plain
+    refute_includes terminal_output("TERM" => "dumb"), "\e["
   end
 
   def test_starts_on_free_ports_and_stops_both_servers_on_interrupt
@@ -275,5 +300,21 @@ class CLITest < Minitest::Test
     assert_equal 1, finish(pid, nil).exitstatus
     assert_includes output, "must publish one port on 127.0.0.1"
     refute(events.any? { |event| event["event"] == "started" })
+  end
+
+  private
+
+  def terminal_output(env = {})
+    PTY.open do |reader, writer|
+      pid = start_cli({ "TERM" => "xterm-256color", "NO_COLOR" => nil }.merge(env), terminal: writer)
+      buffer = +""
+      wait_until(pid) do
+        chunk = reader.read_nonblock(16_384, exception: false)
+        buffer << chunk if chunk.is_a?(String)
+        buffer.include?("Ready:")
+      end
+      finish(pid)
+      buffer
+    end
   end
 end

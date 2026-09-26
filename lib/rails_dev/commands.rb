@@ -80,6 +80,10 @@ module RailsDev
       @output.puts("[rails-dev] #{message}")
     end
 
+    def color?
+      @output.tty? && env["NO_COLOR"].to_s.empty? && env["TERM"] != "dumb"
+    end
+
     private
 
     def execute(argv, stream:)

@@ -14,10 +14,10 @@ module RailsDev
       @endpoints.select! { |endpoint| selected?(endpoint.name) }
     end
 
-    def command
+    def command(color:)
       [RbConfig.ruby, Gem.bin_path("foreman", "foreman"), "start", "--procfile", @path, "--root", @root,
        "--port", base_port.to_s, "--formation", formation,
-       "--timeout", @config.shutdown_timeout.to_s]
+       "--timeout", @config.shutdown_timeout.to_s, color ? "--color" : "--no-color"]
     end
 
     private

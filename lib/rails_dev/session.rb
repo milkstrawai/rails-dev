@@ -137,7 +137,7 @@ module RailsDev
     def start_foreman(web)
       @endpoints.each { |endpoint| env.merge!(endpoint.environment) }
       env.merge!("RAILS_PORT" => web.port.to_s, "RAILS_DEV_URL" => web.url)
-      @application = @commands.start("foreman", @foreman.command, keep_stdin_open: true)
+      @application = @commands.start("foreman", @foreman.command(color: @commands.color?), keep_stdin_open: true)
       @processes << @application
     end
 

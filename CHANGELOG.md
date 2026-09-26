@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Restore Foreman's process colors in terminals, respecting `NO_COLOR` and `TERM=dumb`.
+
 ## 0.1.0 - 2026-09-24
 
 - Run app Procfiles through Foreman on available ports, including multiple instances from the same checkout.
