@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Restore Foreman's process colors in terminals, respecting `NO_COLOR` and `TERM=dumb`.
+- Render Inertia pages on the server in development through each run's own Vite server.
 
 ## 0.1.0 - 2026-09-24
 

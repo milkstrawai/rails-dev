@@ -4,6 +4,7 @@ require "action_mailer/railtie"
 require "rails_dev/railtie"
 unless ENV["TEST_ERB"]
   require "rails_vite"
+  require "inertia_rails" if ENV["TEST_INERTIA"]
   require "rails_dev/rails_vite" unless ENV["TEST_NO_VITE_HELPER"]
 end
 
@@ -26,6 +27,8 @@ middleware = Rails.application.middleware.map(&:klass).map(&:name)
 puts JSON.generate(
   metadata: defined?(RailsVite) && RailsVite.config.dev_meta_path.to_s,
   auto_build: defined?(RailsVite) && RailsVite.config.auto_build?,
+  inertia_vite_url: defined?(InertiaRails) && InertiaRails::SSR.vite_dev_server_url,
+  inertia_vite_running: defined?(InertiaRails) && InertiaRails::SSR.vite_dev_server_running?,
   hosts: Rails.application.config.hosts.map(&:to_s),
   mailer: Rails.application.config.action_mailer.default_url_options,
   routes: Rails.application.routes.default_url_options,
