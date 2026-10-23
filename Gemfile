@@ -4,6 +4,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "actionmailer", "~> 8.1"
+gem "inertia_rails", "~> 3.23"
 gem "irb"
 gem "minitest", "~> 6.0"
 gem "puma", "~> 8.0"

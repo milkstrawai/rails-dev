@@ -181,6 +181,8 @@ export default defineConfig(async ({ command }) => {
 })
 ```
 
+With `inertia_rails`, server-side rendering in development uses this run's Vite server over loopback HTTP, and Puma's `inertia_ssr` plugin does not start a separate SSR server. An `ssr_url` set by your app still takes precedence.
+
 ## Multiple runs from one checkout
 
 Ports, URLs, Rails PID files, cookies, Vite metadata, and Vite caches are separate per run. Compiled JavaScript and CSS remain shared.

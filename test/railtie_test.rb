@@ -40,6 +40,26 @@ class RailtieTest < Minitest::Test
     refute boot.fetch("auto_build")
   end
 
+  def test_inertia_renders_through_the_runs_vite_server_over_loopback
+    Dir.mktmpdir do |runtime|
+      File.write(File.join(runtime, "vite-loopback-url"), "http://127.0.0.1:5174")
+
+      assert_equal "http://127.0.0.1:5174",
+                   boot("TEST_INERTIA" => "1", "RAILS_DEV_RUNTIME" => runtime).fetch("inertia_vite_url")
+    end
+  end
+
+  def test_inertia_does_not_start_its_own_ssr_server_before_vite_listens
+    config = boot("TEST_INERTIA" => "1")
+
+    assert_nil config.fetch("inertia_vite_url")
+    assert config.fetch("inertia_vite_running")
+  end
+
+  def test_normal_development_keeps_inertia_vite_detection
+    refute boot("TEST_INERTIA" => "1", "RAILS_DEV_RUNTIME" => nil).fetch("inertia_vite_running")
+  end
+
   def test_normal_development_keeps_app_defaults
     config = boot("RAILS_DEV_RUNTIME" => nil)
 

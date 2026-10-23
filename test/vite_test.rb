@@ -44,15 +44,27 @@ class ViteTest < Minitest::Test
     assert_equal "serve", configuration.fetch("apply")
   end
 
+  def test_saves_the_loopback_url_once_vite_listens
+    Dir.mktmpdir do |runtime|
+      port = node("test/fixtures/vite_server.mjs", "RAILS_DEV_RUNTIME" => runtime).to_i
+
+      assert_equal "http://127.0.0.1:#{port}", File.read(File.join(runtime, "vite-loopback-url"))
+    end
+  end
+
   private
 
   def configuration(overrides = {})
+    JSON.parse(node("test/fixtures/vite_configuration.mjs", overrides))
+  end
+
+  def node(script, overrides)
     env = { "RAILS_DEV_RUNTIME" => "/tmp/rails-dev-run", "RAILS_PORT" => "3001",
             "RAILS_DEV_URL" => "https://laptop.example.ts.net",
             "RAILS_DEV_VITE_URL" => "https://laptop.example.ts.net:8443" }
-    output, error, status = Open3.capture3(env.merge(overrides), "node", "test/fixtures/vite_configuration.mjs")
+    output, error, status = Open3.capture3(env.merge(overrides), "node", script)
 
     assert_predicate status, :success?, error
-    JSON.parse(output)
+    output
   end
 end
